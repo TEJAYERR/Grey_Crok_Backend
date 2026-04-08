@@ -1,5 +1,6 @@
 package com.jashu.shopping_website.controller;
 
+import com.jashu.shopping_website.dto.AddToCartRequest;
 import com.jashu.shopping_website.entities.CartItem;
 import com.jashu.shopping_website.service.CartService;
 import com.jashu.shopping_website.util.TokenUtil;
@@ -48,8 +49,8 @@ public class CartController {
         }
     }
 
-    @PostMapping("{id}")
-    public ResponseEntity<?> addProductToCart(@RequestHeader("Authorization") String authorization, @PathVariable int id){
+    @PostMapping("/items")
+    public ResponseEntity<?> addProductToCart(@RequestHeader("Authorization") String authorization, @RequestBody AddToCartRequest addToCartRequest){
 
         if(authorization == null || !authorization.startsWith("Bearer ")){
             throw new RuntimeException("Invalid Token!");
@@ -70,13 +71,13 @@ public class CartController {
         }
 
         try {
-            return new ResponseEntity<>(cartService.addProductToCart(id, email), HttpStatus.CREATED);
+            return new ResponseEntity<>(cartService.addProductToCart(addToCartRequest, email), HttpStatus.CREATED);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    @DeleteMapping("{id}")
+    @DeleteMapping("/items/{id}")
     public ResponseEntity<?> deleteProductFromCart(@RequestHeader("Authorization") String authorization, @PathVariable int id){
 
         if(authorization == null || !authorization.startsWith("Bearer ")){

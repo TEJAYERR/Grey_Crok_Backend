@@ -1,5 +1,6 @@
 package com.jashu.shopping_website.service;
 
+import com.jashu.shopping_website.dto.AddToCartRequest;
 import com.jashu.shopping_website.dto.CartItemResponse;
 import com.jashu.shopping_website.entities.Cart;
 import com.jashu.shopping_website.entities.CartItem;
@@ -61,7 +62,7 @@ public class CartService {
         return cartItemResponses;
     }
 
-    public String addProductToCart(int id, String email){
+    public String addProductToCart(AddToCartRequest addToCartRequest, String email){
 
         User user = userRepo.getByEmail(email);
 
@@ -69,7 +70,7 @@ public class CartService {
             throw new IllegalArgumentException("No User Exists");
         }
 
-        Product product = productRepo.getByProductId(id);
+        Product product = productRepo.getByProductId(addToCartRequest.getProductId());
 
         if(product == null){
             throw new IllegalArgumentException("No product Exist");
@@ -81,19 +82,16 @@ public class CartService {
 
             cart.setUser(user);
 
-            cartRepo.save(cart);
+            cart.setCartItems(new ArrayList<>());
 
             user.setCart(cart);
-
-            user.getCart().setCartItems(new ArrayList<>());
-
         }
 
         List<CartItem> cartItems = user.getCart().getCartItems();
 
         for (CartItem cartItem : cartItems){
-            if(cartItem.getProduct().getProductId() == id){
-                cartItem.setQuantity(cartItem.getQuantity() + 1);
+            if(cartItem.getProduct().getProductId() == addToCartRequest.getProductId()){
+                cartItem.setQuantity(cartItem.getQuantity() + addToCartRequest.getQuantity());
                 userRepo.save(user);
                 return "Product added Successfully";
             }
@@ -107,7 +105,7 @@ public class CartService {
 
         user.getCart().getCartItems().add(cartItem);
 
-        cartItem.setQuantity(cartItem.getQuantity() + 1);
+        cartItem.setQuantity(addToCartRequest.getQuantity());
 
         userRepo.save(user);
 

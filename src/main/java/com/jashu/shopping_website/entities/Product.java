@@ -30,6 +30,9 @@ public class Product {
     @OneToMany(mappedBy = "product")
     List<CartItem> cartItems;
 
+    @OneToMany(mappedBy = "product")
+    List<OrderItem> orderItems;
+
     public Product(){}
 
     public Product(Integer productId, String productName, float productPrice, String productDescription, String brand, int quantity, boolean available, int productRating, String imageName, String imageType, byte[] imageData) {

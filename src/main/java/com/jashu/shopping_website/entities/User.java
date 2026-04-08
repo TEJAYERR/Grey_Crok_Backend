@@ -20,8 +20,14 @@ public class User {
     String password;
     String role = "user";
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    Address address;
+
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     Cart cart;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    List<Order> orders;
 
     public int getUserId() {
         return userId;
