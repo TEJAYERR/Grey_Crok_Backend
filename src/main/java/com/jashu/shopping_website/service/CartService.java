@@ -2,6 +2,7 @@ package com.jashu.shopping_website.service;
 
 import com.jashu.shopping_website.dto.AddToCartRequest;
 import com.jashu.shopping_website.dto.CartItemResponse;
+import com.jashu.shopping_website.dto.CartResponse;
 import com.jashu.shopping_website.entities.Cart;
 import com.jashu.shopping_website.entities.CartItem;
 import com.jashu.shopping_website.entities.Product;
@@ -62,7 +63,7 @@ public class CartService {
         return cartItemResponses;
     }
 
-    public String addProductToCart(AddToCartRequest addToCartRequest, String email){
+    public CartResponse addProductToCart(AddToCartRequest addToCartRequest, String email){
 
         User user = userRepo.getByEmail(email);
 
@@ -88,13 +89,22 @@ public class CartService {
         }
 
         List<CartItem> cartItems = user.getCart().getCartItems();
+        CartResponse cartResponse = new CartResponse();
+        cartResponse.setCartItems(new ArrayList<>());
+
+        cartResponse.setCartId(user.getCart().getCartId());
 
         for (CartItem cartItem : cartItems){
+
             if(cartItem.getProduct().getProductId() == addToCartRequest.getProductId()){
                 cartItem.setQuantity(cartItem.getQuantity() + addToCartRequest.getQuantity());
                 userRepo.save(user);
-                return "Product added Successfully";
+
+                cartResponse.getCartItems().add(new CartItemResponse(cartItem.getProduct().getProductId(), cartItem.getQuantity()));
+                return cartResponse;
             }
+
+            cartResponse.getCartItems().add(new CartItemResponse(cartItem.getProduct().getProductId(), cartItem.getQuantity()));
         }
 
         CartItem cartItem = new CartItem();
@@ -107,9 +117,11 @@ public class CartService {
 
         cartItem.setQuantity(addToCartRequest.getQuantity());
 
+        cartResponse.getCartItems().add(new CartItemResponse(cartItem.getProduct().getProductId(), cartItem.getQuantity()));
+
         userRepo.save(user);
 
-        return "Product added to cart successfully !!";
+        return cartResponse;
     }
 
     public String deleteProductFromCart(int id, String email){

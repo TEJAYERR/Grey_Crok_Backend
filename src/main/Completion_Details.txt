@@ -1,0 +1,9 @@
+  1. User Profile viewing in need to get the details of the user -> with DTO.
+
+  //Payment gateway Integration
+  2. Razorpay integration with the sample KEY and SECREAT_KEY from the razorpay.com
+  3. razorpay dependency from maven
+
+
+  //Things to care :::
+  1. product.setQuantity(product.getQuantity() - orderItemRequest.getQuantity()); //once the payment clear the quantity should reduce

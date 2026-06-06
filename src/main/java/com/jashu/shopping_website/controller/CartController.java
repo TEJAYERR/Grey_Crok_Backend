@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @CrossOrigin
@@ -23,6 +24,8 @@ public class CartController {
 
     @GetMapping
     public ResponseEntity<?> getCartItems(@RequestHeader("Authorization") String authorization){
+
+        long start = System.currentTimeMillis();
 
         if(authorization == null || !authorization.startsWith("Bearer ")){
             throw new RuntimeException("Invalid Token!");
@@ -43,7 +46,12 @@ public class CartController {
         }
 
         try {
-            return new ResponseEntity<>(cartService.getCartItems(email), HttpStatus.CREATED);
+            ResponseEntity<?> responseEntity = new ResponseEntity<>(cartService.getCartItems(email), HttpStatus.OK);
+
+            System.out.println(System.currentTimeMillis() - start); //optimization checking
+
+            return responseEntity;
+
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -99,7 +107,7 @@ public class CartController {
         }
 
         try {
-            return new ResponseEntity<>(cartService.deleteProductFromCart(id, email), HttpStatus.OK);
+            return new ResponseEntity<>(Map.of("message", cartService.deleteProductFromCart(id, email)), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }

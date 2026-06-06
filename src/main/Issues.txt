@@ -1,0 +1,6 @@
+
+
+1. Order is getting created when on clicking the place order without first going through the payment methods
+    ex : I click on place order I will go to payment he will select -> 1.) COD or 2.) Razorpay Gateway
+
+2. Transactional flow management -> ACID properties

@@ -2,6 +2,8 @@ package com.jashu.shopping_website.entities;
 
 import jakarta.persistence.*;
 
+import java.text.DecimalFormat;
+
 @Entity
 public class OrderItem {
 
@@ -57,7 +59,7 @@ public class OrderItem {
     }
 
     public void setPriceAtPurchase(double priceAtPurchase) {
-        this.priceAtPurchase = priceAtPurchase;
+        this.priceAtPurchase = Math.round(priceAtPurchase * 100.0) / 100.0;
     }
 
     @Override

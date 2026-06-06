@@ -4,32 +4,22 @@ import com.jashu.shopping_website.entities.OrderItem;
 
 public class OrderItemResponse {
 
-    int orderId;
-    String orderName;
+    String productName;
     int quantity;
     double priceAtPurchase;
 
     public OrderItemResponse(OrderItem orderItem){
-        this.orderId = orderItem.getOrderItemId();
-        this.orderName = orderItem.getProduct().getProductName();
+        this.productName = orderItem.getProduct().getProductName();
         this.quantity = orderItem.getQuantity();
         this.priceAtPurchase = orderItem.getPriceAtPurchase();
     }
 
-    public int getOrderId() {
-        return orderId;
+    public String getProductName() {
+        return productName;
     }
 
-    public void setOrderId(int orderId) {
-        this.orderId = orderId;
-    }
-
-    public String getOrderName() {
-        return orderName;
-    }
-
-    public void setOrderName(String orderName) {
-        this.orderName = orderName;
+    public void setProductName(String productName) {
+        this.productName = productName;
     }
 
     public int getQuantity() {

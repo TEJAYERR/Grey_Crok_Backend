@@ -3,6 +3,7 @@ package com.jashu.shopping_website.service;
 import com.jashu.shopping_website.dto.ProductUpdateRequest;
 import com.jashu.shopping_website.entities.Product;
 import com.jashu.shopping_website.dto.ProductResponse;
+import com.jashu.shopping_website.entities.SubCategory;
 import com.jashu.shopping_website.entities.User;
 import com.jashu.shopping_website.repository.ProductRepo;
 import org.jspecify.annotations.NonNull;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -86,7 +88,6 @@ public class ProductService {
         product.setProductPrice(productUpdateRequest.getProductPrice());
         product.setProductRating(productUpdateRequest.getProductRating());
         product.setAvailable(productUpdateRequest.isAvailable());
-        product.setBrand(productUpdateRequest.getBrand());
         product.setQuantity(productUpdateRequest.getQuantity());
         product.setImageName(imageFile.getName());
         product.setImageType(imageFile.getContentType());
@@ -112,5 +113,27 @@ public class ProductService {
 
         productRepo.deleteById(id);
         return "deleted Successfully";
+    }
+
+
+    public List<ProductResponse> searchProductByKeyword(String keyword){
+
+        List<ProductResponse> products = new ArrayList<>();
+        List<ProductResponse> allProducts = productRepo.getProducts();
+
+        for(ProductResponse productResponse : allProducts){
+            if(productResponse.getProductName().contains(keyword)
+                    || productResponse.getProductDescription().contains(keyword)){
+
+                products.add(productResponse);
+            }
+        }
+
+
+        if(products.isEmpty()){
+            throw new RuntimeException("search not found !");
+        }
+
+        return products;
     }
 }

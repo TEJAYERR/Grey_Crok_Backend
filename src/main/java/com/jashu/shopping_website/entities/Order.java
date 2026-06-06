@@ -3,7 +3,6 @@ package com.jashu.shopping_website.entities;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.List;
 
 @Entity(name = "orders")
@@ -19,15 +18,35 @@ public class Order {
 
     LocalDateTime orderDate;
     LocalDateTime expectedDeliveryDate;
-    LocalDateTime deliverdDate;
+    LocalDateTime deliveredDate;
 
     @Enumerated(EnumType.STRING)
     OrderStatus orderStatus;
 
+    @Enumerated(EnumType.STRING)
+    PaymentStatus paymentStatus;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     List<OrderItem> orderItems;
 
+    @Embedded
+    Address address;
+
     double totalAmount;
+
+    String razorpayOrderId;
+
+    String razorpayPaymentId;
+
+    //Shipment Related details
+
+    private String shipmentId;
+
+    private String awbCode;
+
+    private String courierName;
+
+    private String trackingStatus;
 
     public int getOrderId() {
         return orderId;
@@ -61,12 +80,12 @@ public class Order {
         this.expectedDeliveryDate = expectedDeliveryDate;
     }
 
-    public LocalDateTime getDeliverdDate() {
-        return deliverdDate;
+    public LocalDateTime getDeliveredDate() {
+        return deliveredDate;
     }
 
-    public void setDeliverdDate(LocalDateTime deliverdDate) {
-        this.deliverdDate = deliverdDate;
+    public void setDeliveredDate(LocalDateTime deliveredDate) {
+        this.deliveredDate = deliveredDate;
     }
 
     public OrderStatus getOrderStatus() {
@@ -90,7 +109,71 @@ public class Order {
     }
 
     public void setTotalAmount(double totalAmount) {
-        this.totalAmount = totalAmount;
+        this.totalAmount = Math.round(totalAmount * 100.0) / 100.0;
+    }
+
+    public PaymentStatus getPaymentStatus() {
+        return paymentStatus;
+    }
+
+    public void setPaymentStatus(PaymentStatus paymentStatus) {
+        this.paymentStatus = paymentStatus;
+    }
+
+    public Address getAddress() {
+        return address;
+    }
+
+    public void setAddress(Address address) {
+        this.address = address;
+    }
+
+    public String getRazorpayOrderId() {
+        return razorpayOrderId;
+    }
+
+    public void setRazorpayOrderId(String razorpayOrderId) {
+        this.razorpayOrderId = razorpayOrderId;
+    }
+
+    public String getRazorpayPaymentId() {
+        return razorpayPaymentId;
+    }
+
+    public void setRazorpayPaymentId(String razorpayPaymentId) {
+        this.razorpayPaymentId = razorpayPaymentId;
+    }
+
+    public String getShipmentId() {
+        return shipmentId;
+    }
+
+    public void setShipmentId(String shipmentId) {
+        this.shipmentId = shipmentId;
+    }
+
+    public String getAwbCode() {
+        return awbCode;
+    }
+
+    public void setAwbCode(String awbCode) {
+        this.awbCode = awbCode;
+    }
+
+    public String getCourierName() {
+        return courierName;
+    }
+
+    public void setCourierName(String courierName) {
+        this.courierName = courierName;
+    }
+
+    public String getTrackingStatus() {
+        return trackingStatus;
+    }
+
+    public void setTrackingStatus(String trackingStatus) {
+        this.trackingStatus = trackingStatus;
     }
 
     @Override
@@ -100,7 +183,7 @@ public class Order {
                 ", userId =" + user.getUserId()+
                 ", orderDate=" + orderDate +
                 ", expectedDeliveryDate=" + expectedDeliveryDate +
-                ", deliverdDate=" + deliverdDate +
+                ", deliveredDate=" + deliveredDate +
                 ", orderStatus=" + orderStatus +
                 ", orderItems=" + orderItems +
                 ", totalAmount=" + totalAmount +

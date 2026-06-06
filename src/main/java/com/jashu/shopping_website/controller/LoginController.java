@@ -22,7 +22,7 @@ public class LoginController {
     @PostMapping
     public ResponseEntity<?> validate(@RequestBody LoginRequest request){
         try {
-            System.out.println(request);
+            System.out.println("hello from login controller");
             return new ResponseEntity<>(loginService.validateCredentials(request), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);

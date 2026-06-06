@@ -1,26 +1,51 @@
 package com.jashu.shopping_website.dto;
 
 import com.jashu.shopping_website.entities.Order;
+import com.jashu.shopping_website.entities.OrderStatus;
+import com.jashu.shopping_website.entities.PaymentStatus;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 public class OrderResponse {
 
+    String razorpayOrderId;
     LocalDateTime orderDate;
     LocalDateTime expectedDeliveryDate;
-    LocalDateTime deliverdDate;
+    LocalDateTime deliveredDate;
+    OrderStatus orderStatus;
 
     private int orderId;
     private double totalAmount;
     private List<OrderItemResponse> items;
+    PaymentStatus paymentStatus;
 
     public OrderResponse(Order order) {
         this.orderDate = order.getOrderDate();
         this.expectedDeliveryDate = order.getExpectedDeliveryDate();
-        this.deliverdDate = order.getDeliverdDate();
+        this.deliveredDate = order.getDeliveredDate();
         this.orderId = order.getOrderId();
         this.totalAmount = order.getTotalAmount();
+        this.orderStatus = order.getOrderStatus();
+        this.razorpayOrderId = order.getRazorpayOrderId();
+        this.orderStatus = order.getOrderStatus();
+        this.paymentStatus = order.getPaymentStatus();
+    }
+
+    public String getRazorpayOrderId() {
+        return razorpayOrderId;
+    }
+
+    public void setRazorpayOrderId(String razorpayOrderId) {
+        this.razorpayOrderId = razorpayOrderId;
+    }
+
+    public OrderStatus getOrderStatus() {
+        return orderStatus;
+    }
+
+    public void setOrderStatus(OrderStatus orderStatus) {
+        this.orderStatus = orderStatus;
     }
 
     public LocalDateTime getOrderDate() {
@@ -39,12 +64,12 @@ public class OrderResponse {
         this.expectedDeliveryDate = expectedDeliveryDate;
     }
 
-    public LocalDateTime getDeliverdDate() {
-        return deliverdDate;
+    public LocalDateTime getDeliveredDate() {
+        return deliveredDate;
     }
 
-    public void setDeliverdDate(LocalDateTime deliverdDate) {
-        this.deliverdDate = deliverdDate;
+    public void setDeliveredDate(LocalDateTime deliveredDate) {
+        this.deliveredDate = deliveredDate;
     }
 
     public int getOrderId() {

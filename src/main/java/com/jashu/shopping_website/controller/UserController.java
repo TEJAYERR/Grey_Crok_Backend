@@ -2,11 +2,13 @@ package com.jashu.shopping_website.controller;
 
 import com.jashu.shopping_website.util.TokenUtil;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class UserController {
 
+    @RequestMapping("/profile")
     public String profile(@RequestHeader("Authorization") String authorization){
 
         if(authorization == null || !authorization.startsWith("Bearer ")){
@@ -32,4 +34,6 @@ public class UserController {
 //        }
         return "";
     }
+
+
 }

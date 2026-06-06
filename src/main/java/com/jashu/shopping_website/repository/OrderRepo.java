@@ -10,4 +10,10 @@ public interface OrderRepo extends JpaRepository<Order, Integer> {
     List<Order> getOrdersByUser(User user);
 
     List<Order> getOrdersByUserEmail(String userEmail);
+
+    Order getOrderByOrderId(int orderId);
+
+    Order findByRazorpayOrderId(String razorpayOrderId);
+
+    Order getOrderByShipmentId(String shipmentId);
 }

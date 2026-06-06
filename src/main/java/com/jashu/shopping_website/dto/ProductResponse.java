@@ -9,19 +9,17 @@ public class ProductResponse {
     private String productName;
     private float productPrice;
     private String productDescription;
-    private String brand;
     private int quantity;
     private boolean isAvailable;
     private int productRating;
 
     public ProductResponse(){}
 
-    public ProductResponse(int productId, String productName, float productPrice, String productDescription, String brand, int quantity, boolean isAvailable, int productRating) {
+    public ProductResponse(int productId, String productName, float productPrice, String productDescription, int quantity, boolean isAvailable, int productRating) {
         this.productId = productId;
         this.productName = productName;
         this.productPrice = productPrice;
         this.productDescription = productDescription;
-        this.brand = brand;
         this.quantity = quantity;
         this.isAvailable = isAvailable;
         this.productRating = productRating;
@@ -34,7 +32,6 @@ public class ProductResponse {
         productResponse.setProductName(product.getProductName());
         productResponse.setProductDescription(product.getProductDescription());
         productResponse.setProductRating(product.getProductRating());
-        productResponse.setBrand(product.getBrand());
         productResponse.setAvailable(product.isAvailable());
         productResponse.setProductRating(product.getProductRating());
         productResponse.setQuantity(product.getQuantity());
@@ -72,14 +69,6 @@ public class ProductResponse {
 
     public void setProductDescription(String productDescription) {
         this.productDescription = productDescription;
-    }
-
-    public String getBrand() {
-        return brand;
-    }
-
-    public void setBrand(String brand) {
-        this.brand = brand;
     }
 
     public int getQuantity() {

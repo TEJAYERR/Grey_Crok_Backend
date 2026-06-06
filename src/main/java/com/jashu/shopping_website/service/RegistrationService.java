@@ -5,6 +5,7 @@ import com.jashu.shopping_website.dto.RegisterResponse;
 import com.jashu.shopping_website.entities.User;
 import com.jashu.shopping_website.repository.UserRepo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -32,7 +33,7 @@ public class RegistrationService {
 
             newUser.setUserName(registerRequest.getName());
             newUser.setEmail(registerRequest.getEmail());
-            newUser.setPassword(registerRequest.getPassword());
+            newUser.setPassword(new BCryptPasswordEncoder().encode(registerRequest.getPassword()));
             newUser.setMobileNumber(registerRequest.getMobileNumber());
 
             User user = userRepo.save(newUser);

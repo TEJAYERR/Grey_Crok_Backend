@@ -53,4 +53,15 @@ public class UserProductController {
                 .contentType(MediaType.valueOf(product.getImageType()))
                 .body(product.getImageData());
     }
+
+    @GetMapping("/search={searchKeyword}")
+    public ResponseEntity<?> searchProductsByKeyword(@PathVariable String searchKeyword){
+
+        try {
+            return new ResponseEntity<>(productService.searchProductByKeyword(searchKeyword), HttpStatus.OK);
+        } catch (Exception e) {
+            System.out.println("Error");
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        }
+    }
 }

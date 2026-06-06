@@ -17,12 +17,15 @@ public class Product {
     private String productName;
     private float productPrice;
     private String productDescription;
-    private String brand;
     private int quantity;
     private Boolean available;
     private int productRating;
     private String imageName;
     private String imageType;
+    @Enumerated(EnumType.STRING)
+    private Category category;
+    @Enumerated(EnumType.STRING)
+    private SubCategory subCategory;
     @Lob
     @Basic(fetch = FetchType.LAZY)
     private byte[] imageData;
@@ -35,13 +38,14 @@ public class Product {
 
     public Product(){}
 
-    public Product(Integer productId, String productName, float productPrice, String productDescription, String brand, int quantity, boolean available, int productRating, String imageName, String imageType, byte[] imageData) {
+    public Product(Integer productId, String productName, float productPrice, String productDescription, int quantity, Category category, SubCategory subCategory, boolean available, int productRating, String imageName, String imageType, byte[] imageData) {
         this.productId = productId;
         this.productName = productName;
         this.productPrice = productPrice;
         this.productDescription = productDescription;
-        this.brand = brand;
         this.quantity = quantity;
+        this.category = category;
+        this.subCategory = subCategory;
         this.available = available;
         this.productRating = productRating;
         this.imageName = imageName;
@@ -79,14 +83,6 @@ public class Product {
 
     public void setProductDescription(String productDescription) {
         this.productDescription = productDescription;
-    }
-
-    public String getBrand() {
-        return brand;
-    }
-
-    public void setBrand(String brand) {
-        this.brand = brand;
     }
 
     public int getQuantity() {
@@ -137,5 +133,27 @@ public class Product {
         this.imageData = imageData;
     }
 
+    public Boolean getAvailable() {
+        return available;
+    }
 
+    public void setAvailable(Boolean available) {
+        this.available = available;
+    }
+
+    public Category getCategory() {
+        return category;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
+    }
+
+    public SubCategory getSubCategory() {
+        return subCategory;
+    }
+
+    public void setSubCategory(SubCategory subCategory) {
+        this.subCategory = subCategory;
+    }
 }
