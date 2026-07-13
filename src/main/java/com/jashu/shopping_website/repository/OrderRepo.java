@@ -1,19 +1,19 @@
 package com.jashu.shopping_website.repository;
 
 import com.jashu.shopping_website.entities.Order;
+import com.jashu.shopping_website.entities.OrderStatus;
 import com.jashu.shopping_website.entities.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
-public interface OrderRepo extends JpaRepository<Order, Integer> {
-    List<Order> getOrdersByUser(User user);
+public interface OrderRepo extends JpaRepository<Order, UUID> {
 
-    List<Order> getOrdersByUserEmail(String userEmail);
+    List<Order> findOrdersByUserAndOrderStatus(User user, OrderStatus orderStatus);
 
-    Order getOrderByOrderId(int orderId);
+    List<Order> getOrdersByUserAndOrderStatusNot(User user, OrderStatus orderStatus);
 
-    Order findByRazorpayOrderId(String razorpayOrderId);
-
-    Order getOrderByShipmentId(String shipmentId);
+    Optional<Order> findByOrderIdAndUser(UUID orderId, User user);
 }

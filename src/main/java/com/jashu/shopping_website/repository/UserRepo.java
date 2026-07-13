@@ -5,29 +5,14 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-
-//import java.lang.ScopedValue;
+import java.util.UUID;
 
 @Repository
-public interface UserRepo extends JpaRepository<User, Integer> {
-    User findUsersByUserName(String userName);
-
-    User findUsersByUserNameAndPassword(String userName, String password);
-
-    User findUsersByMobileNumberAndPassword(String mobileNumber, String password);
+public interface UserRepo extends JpaRepository<User, UUID> {
 
     User findUsersByMobileNumber(String mobileNumber);
-
-    boolean existsUserByMobileNumberAndEmail(String mobileNumber, String email);
-
-    boolean existsUserByMobileNumberOrEmail(String mobileNumber, String email);
 
     boolean existsByEmail(String email);
 
     boolean existsByMobileNumber(String mobileNumber);
-
-    List<User> getUserByEmail(String email);
-
-    User getByEmail(String email);
-//    ScopedValue<Object> findByUserName(String userName);
 }

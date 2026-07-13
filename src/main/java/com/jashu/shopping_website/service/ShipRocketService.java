@@ -6,7 +6,6 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -52,7 +51,6 @@ public class ShipRocketService {
             throw new RuntimeException("Token mismatch");
         }
 
-        System.out.println("Shipment Created Successfully");
         ShipmentOrderResponse shipmentOrderResponse = new ShipmentOrderResponse();
 
         shipmentOrderResponse.setShipmentId(shipmentOrderRequest.getOrderId() + "soi");

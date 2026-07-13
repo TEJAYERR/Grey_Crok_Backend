@@ -7,153 +7,105 @@ import com.jashu.shopping_website.entities.Cart;
 import com.jashu.shopping_website.entities.CartItem;
 import com.jashu.shopping_website.entities.Product;
 import com.jashu.shopping_website.entities.User;
+import com.jashu.shopping_website.exception.ResourceNotFoundException;
+import com.jashu.shopping_website.repository.CartItemRepo;
 import com.jashu.shopping_website.repository.CartRepo;
 import com.jashu.shopping_website.repository.ProductRepo;
 import com.jashu.shopping_website.repository.UserRepo;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class CartService {
 
-    UserRepo userRepo;
-    CartRepo cartRepo;
-    ProductRepo productRepo;
+    private final UserRepo userRepo;
+    private final ProductRepo productRepo;
+    private final CartItemRepo cartItemRepo;
+    private final CartRepo cartRepo;
 
-    @Autowired
-    public void setUserRepo(UserRepo userRepo){
+    public CartService(UserRepo userRepo, ProductRepo productRepo, CartItemRepo cartItemRepo, CartRepo cartRepo){
         this.userRepo = userRepo;
-    }
-
-    @Autowired
-    public void setProductRepo(ProductRepo productRepo){
         this.productRepo = productRepo;
-    }
-
-    @Autowired
-    public void setCartRepo(CartRepo cartRepo){
+        this.cartItemRepo = cartItemRepo;
         this.cartRepo = cartRepo;
     }
 
-    public List<CartItemResponse> getCartItems(String email){
+    @Transactional
+    public CartResponse getCartItems(UUID userId){
 
-        User user = userRepo.getByEmail(email);
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("user not found !"));
 
-        if(user == null){
-            throw new IllegalArgumentException("No User Exists");
+        Cart cart = user.getCart();
+
+        if(cart == null || cart.getCartItems().isEmpty()){
+            throw new ResourceNotFoundException("cart is empty !");
         }
 
-        System.out.println("Hello Exiting");
-
-        List<CartItem> cartItems = user.getCart().getCartItems();
-
-        List<CartItemResponse> cartItemResponses = new ArrayList<>();
-
-        for(CartItem cartItem : cartItems){
-            CartItemResponse cartItemResponse = new CartItemResponse();
-            cartItemResponse.setProductId(cartItem.getProduct().getProductId());
-            cartItemResponse.setQuantity(cartItem.getQuantity());
-
-            cartItemResponses.add(cartItemResponse);
-        }
-
-        return cartItemResponses;
+        return new CartResponse(cart);
     }
 
-    public CartResponse addProductToCart(AddToCartRequest addToCartRequest, String email){
+    @Transactional
+    public CartResponse addProductToCart(UUID userId, AddToCartRequest addToCartRequest){
 
-        User user = userRepo.getByEmail(email);
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("user not found !"));
 
-        if(user == null){
-            throw new IllegalArgumentException("No User Exists");
-        }
+        Product product = productRepo.findById(addToCartRequest.getProductId())
+                .orElseThrow(() -> new ResourceNotFoundException("product not found !"));
 
-        Product product = productRepo.getByProductId(addToCartRequest.getProductId());
+        Cart cart = user.getCart();
+        if(cart == null){
 
-        if(product == null){
-            throw new IllegalArgumentException("No product Exist");
-        }
-
-        if(user.getCart() == null){
-
-            Cart cart = new Cart();
-
+            cart = new Cart();
             cart.setUser(user);
-
             cart.setCartItems(new ArrayList<>());
-
             user.setCart(cart);
         }
 
-        List<CartItem> cartItems = user.getCart().getCartItems();
-        CartResponse cartResponse = new CartResponse();
-        cartResponse.setCartItems(new ArrayList<>());
+        List<CartItem> cartItems = cart.getCartItems();
 
-        cartResponse.setCartId(user.getCart().getCartId());
+        //If product already exists in the cart
+        for (CartItem cartItem : cartItems) {
 
-        for (CartItem cartItem : cartItems){
+            if (cartItem.getProduct().getProductId().equals(addToCartRequest.getProductId())) {
 
-            if(cartItem.getProduct().getProductId() == addToCartRequest.getProductId()){
                 cartItem.setQuantity(cartItem.getQuantity() + addToCartRequest.getQuantity());
-                userRepo.save(user);
-
-                cartResponse.getCartItems().add(new CartItemResponse(cartItem.getProduct().getProductId(), cartItem.getQuantity()));
-                return cartResponse;
+                return new CartResponse(cart);
             }
-
-            cartResponse.getCartItems().add(new CartItemResponse(cartItem.getProduct().getProductId(), cartItem.getQuantity()));
         }
 
         CartItem cartItem = new CartItem();
-
-        cartItem.setCart(user.getCart());
-
+        cartItem.setCart(cart);
         cartItem.setProduct(product);
-
-        user.getCart().getCartItems().add(cartItem);
-
+        cart.getCartItems().add(cartItem);
         cartItem.setQuantity(addToCartRequest.getQuantity());
 
-        cartResponse.getCartItems().add(new CartItemResponse(cartItem.getProduct().getProductId(), cartItem.getQuantity()));
-
+        //new cart Item
+        cartItemRepo.save(cartItem);
+        cartRepo.save(cart);
         userRepo.save(user);
 
-        return cartResponse;
+        return new CartResponse(cart);
     }
 
-    public String deleteProductFromCart(int id, String email){
+    @Transactional
+    public String deleteProductFromCart(UUID userId, UUID cartItemId){
 
-        User user = userRepo.getByEmail(email);
+        CartItem cartItem = cartItemRepo.findById(cartItemId)
+                .orElseThrow(() -> new ResourceNotFoundException("cart item not found !"));
 
-        if(user == null){
-            throw new IllegalArgumentException("No User Exists");
+        if(!cartItem.getCart().getUser().getUserId().equals(userId)){
+            throw new ResourceNotFoundException("unauthorized");
         }
 
-        if(user.getCart() == null){
-            throw new IllegalArgumentException("No products Exist in cart to delete");
-        }
+        cartItemRepo.deleteById(cartItemId);
 
-        List<CartItem> cartItems = user.getCart().getCartItems();
-
-        for (CartItem cartItem : cartItems){
-
-            if(cartItem.getProduct().getProductId() == id){
-
-                cartItems.remove(cartItem);
-
-                user.getCart().setCartItems(cartItems);
-
-                userRepo.save(user);
-
-                return "Product deleted Successfully";
-            }
-        }
-
-        return "Product does not exist in cart";
+        return "Product deleted Successfully";
     }
-
-
 }

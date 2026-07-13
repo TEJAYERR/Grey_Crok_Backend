@@ -1,27 +1,25 @@
 package com.jashu.shopping_website.dto;
 
+import com.jashu.shopping_website.entities.Cart;
 import com.jashu.shopping_website.entities.CartItem;
+import lombok.Getter;
+import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
+@Setter
+@Getter
 public class CartResponse {
 
-    int cartId;
-    List<CartItemResponse> cartItems;
+    UUID cartId;
+    List<CartItemResponse> cartItems = new ArrayList<>();
 
-    public int getCartId() {
-        return cartId;
-    }
-
-    public void setCartId(int cartId) {
-        this.cartId = cartId;
-    }
-
-    public List<CartItemResponse> getCartItems() {
-        return cartItems;
-    }
-
-    public void setCartItems(List<CartItemResponse> cartItems) {
-        this.cartItems = cartItems;
+    public CartResponse(Cart cart){
+        this.cartId = cart.getCartId();
+        for(CartItem cartItem : cart.getCartItems()){
+            cartItems.add(new CartItemResponse(cartItem));
+        }
     }
 }

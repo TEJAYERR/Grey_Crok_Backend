@@ -2,160 +2,110 @@ package com.jashu.shopping_website.service;
 
 import com.jashu.shopping_website.dto.*;
 import com.jashu.shopping_website.entities.*;
-import com.jashu.shopping_website.mapper.ShipmentOrderMapper;
-import com.jashu.shopping_website.repository.OrderRepo;
-import com.jashu.shopping_website.repository.ProductRepo;
-import com.jashu.shopping_website.repository.UserRepo;
-import com.razorpay.RazorpayClient;
+import com.jashu.shopping_website.exception.*;
+import com.jashu.shopping_website.repository.*;
 import com.razorpay.RazorpayException;
-import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.razorpay.Refund;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class OrderService {
 
-    private UserRepo userRepo;
-    private ProductRepo productRepo;
-    private OrderRepo orderRepo;
-    private ShipRocketService shipRocketService;
+    private final UserRepo userRepo;
+    private final OrderRepo orderRepo;
+    private final PaymentRepo paymentRepo;
+    private final RazorpayService razorpayService;
+    private final OrderCreationService orderCreationService;
+    private final PaymentService paymentService;
 
-    @Autowired
-    public  void setShipRocketService(ShipRocketService shipRocketService){
-        this.shipRocketService = shipRocketService;
-    }
-
-    @Autowired
-    public void setUserRepo(UserRepo userRepo){
+    public OrderService(UserRepo userRepo, OrderRepo orderRepo, PaymentRepo paymentRepo, RazorpayService razorpayService, OrderCreationService orderCreationService, PaymentService paymentService) {
         this.userRepo = userRepo;
-    }
-
-    @Autowired
-    public void setOrderRepo(OrderRepo orderRepo){
         this.orderRepo = orderRepo;
-    }
-
-    @Autowired
-    public void setProductRepo(ProductRepo productRepo){
-        this.productRepo = productRepo;
-    }
-
-    //Getting User Order Accroding to the email
-
-    public List<OrderResponse> getUserOrders(String email){
-
-        User user = userRepo.getByEmail(email);
-
-        if(user == null){
-            throw new IllegalArgumentException("User Does not exist");
-        }
-
-        List<OrderResponse> orderResponses = new ArrayList<>();
-
-        for(Order order : orderRepo.getOrdersByUser(user)){
-
-            OrderResponse orderResponse = new OrderResponse(order);
-            orderResponse.setItems(new ArrayList<>());
-
-            for(OrderItem orderItem : order.getOrderItems()){
-                orderResponse.getItems().add(new OrderItemResponse(orderItem));
-            }
-
-            orderResponses.add(orderResponse);
-        }
-
-        return orderResponses;
+        this.paymentRepo = paymentRepo;
+        this.razorpayService = razorpayService;
+        this.orderCreationService = orderCreationService;
+        this.paymentService = paymentService;
     }
 
 
+    //Getting User Order according to the user -> userId
+    @Transactional
+    public List<OrderResponse> getUserOrders(UUID userId){
+
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("user not found !"));
+
+        return orderRepo.getOrdersByUserAndOrderStatusNot(user, OrderStatus.PENDING)
+                .stream()
+                .map(OrderResponse::new)
+                .toList();
+    }
+
+    @Transactional
+    public OrderResponse getUserOrderById(UUID userId, UUID orderId){
+
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("user not found !"));
+
+        Order order = orderRepo.findByOrderIdAndUser(orderId, user)
+                .orElseThrow(() -> new ResourceNotFoundException("order not found !"));
+
+        Payment payment = paymentRepo
+                .findByOrderAndPaymentStatusNot(order,
+                        PaymentStatus.PENDING
+                );
+
+        return new OrderResponse(order, payment);
+    }
 
     //placing order
+    public OrderResponse placeOrder(UUID userId, OrderPlaceRequest orderPlaceRequest) throws RazorpayException {
 
-    public OrderResponse placeOrder(String email, OrderPlaceRequest orderPlaceRequest) throws RazorpayException {
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found!"));
 
-        User user = userRepo.getByEmail(email);
+        Payment payment = orderCreationService.createOrder(user, orderPlaceRequest);
+        Order order = payment.getOrder();
 
-        if(user == null){
-            throw new IllegalArgumentException("User Does not exist");
+        if(payment.getGatewayOrderId() == null && orderPlaceRequest.getPaymentMethod().equals(PaymentMethod.RAZORPAY)) {
+
+            //razorpay order creation
+            com.razorpay.Order razorpayOrder = razorpayService.createRazorpayOrder(order);
+
+            System.out.println("\n update details \n");
+            payment = paymentService.updatePaymentDetails(payment.getPaymentId(),
+                    "Razorpay",
+                    razorpayOrder.get("id"),
+                    PaymentStatus.PENDING,
+                    PaymentMethod.RAZORPAY
+            );
         }
 
-        Order order = new Order();
+        else if(orderPlaceRequest.getPaymentMethod().equals(PaymentMethod.COD)){
 
-        Address req = orderPlaceRequest.getAddress();
+            System.out.println("\n update details \n");
+            payment = paymentService.updatePaymentDetails(payment.getPaymentId(),
+                    null,
+                    null,
+                    PaymentStatus.NOT_PAID,
+                    PaymentMethod.COD
+            );
 
-        Address copy = new Address();
-
-        copy.setDoorNumber(req.getDoorNumber());
-        copy.setStreet(req.getStreet());
-        copy.setCity(req.getCity());
-        copy.setDistrict(req.getDistrict());
-        copy.setState(req.getState());
-        copy.setPincode(req.getPincode());
-        copy.setCountry(req.getCountry());
-
-        order.setAddress(copy);
-
-        order.setOrderDate(LocalDateTime.now());
-        order.setExpectedDeliveryDate(LocalDateTime.now().plusDays(5));
-        order.setUser(user);
-
-        List<OrderItem> orderItems = new ArrayList<>();
-        double totalAmount = 0;
-
-        for(OrderItemRequest orderItemRequest : orderPlaceRequest.getOrderItemRequests()){
-
-            Product product = productRepo.getByProductId(orderItemRequest.getProductId());
-
-            if(product == null){
-                throw new RuntimeException("No Product Found");
-            }
-
-            if(product.getQuantity() < orderItemRequest.getQuantity()){
-                throw new RuntimeException("Not available!!");
-            }
-
-            if(orderItemRequest.getQuantity() <= 0){
-                throw new RuntimeException("Invalid quantity");
-            }
-
-//            product.setQuantity(product.getQuantity() - orderItemRequest.getQuantity());
-
-            OrderItem orderItem = new OrderItem();
-            orderItem.setOrder(order);
-            orderItem.setProduct(product);
-            orderItem.setQuantity(orderItemRequest.getQuantity());
-            orderItem.setPriceAtPurchase(product.getProductPrice());
-
-            orderItems.add(orderItem);
-
-            totalAmount += orderItem.getPriceAtPurchase() * orderItem.getQuantity();
+            orderCreationService.decrementStock(order);
+            orderCreationService.clearCart(user);
         }
 
-        System.out.println(totalAmount);
-        order.setOrderItems(orderItems);
-        order.setPaymentStatus(PaymentStatus.PENDING);
-        order.setOrderStatus(OrderStatus.PENDING);
+        order = payment.getOrder();
 
-        order.setTotalAmount(totalAmount);
+        order = orderCreationService.setOrderAddress(order, orderPlaceRequest.getAddress());
 
-        RazorpayClient  client = new RazorpayClient("rzp_test_SfGIn89zRbphHF", "Z4r3xGX3UK3R71acSgmpN9sz");
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("amount", (int)order.getTotalAmount() * 100);
-        jsonObject.put("currency", "INR");
-        jsonObject.put("receipt", "order_id" + order.getOrderId());
-
-        com.razorpay.Order razorpayOrder = client.orders.create(jsonObject);
-
-        order.setRazorpayOrderId(razorpayOrder.get("id")); //razorpay order saving
-
-        orderRepo.save(order);
-        userRepo.save(user);
-        OrderResponse orderResponse = new OrderResponse(order);
+        OrderResponse orderResponse = new OrderResponse(order, payment);
         orderResponse.setItems(new ArrayList<>());
 
         for(OrderItem orderItem : order.getOrderItems()) {
@@ -167,141 +117,156 @@ public class OrderService {
 
 
     //verifying the payment
+    @Transactional
+    public String verifyPayment(UUID userId, PaymentVerificationRequest paymentVerificationRequest) throws Exception{
 
-    public String verifyPayment(String email, PaymentVerificationRequest paymentVerificationRequest) throws Exception{
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("user not found !"));
 
-        User user = userRepo.getByEmail(email);
+        Payment payment = paymentRepo.findByGatewayOrderId(paymentVerificationRequest.getGatewayOrderId())
+                .orElseThrow(() -> new ResourceNotFoundException("payment not found"));
 
-        if(user == null){
-            throw new IllegalArgumentException("User Does not exist");
+        Order order = payment.getOrder();
+
+        if(!user.equals(order.getUser())){
+            throw new UnauthorizedOperationException("not authorized");
         }
 
-        Order order = orderRepo.findByRazorpayOrderId(paymentVerificationRequest.getRazorpayOrderId());
+        String data = paymentVerificationRequest.getGatewayOrderId() + "|" + paymentVerificationRequest.getGatewayPaymentId();
+        String generatedSignature = razorpayService.generateSignature(data);
 
-        if(order == null){
-            throw new RuntimeException("No order found");
+        if(!generatedSignature.equals(paymentVerificationRequest.getGatewaySignature())){
+            throw new InvalidSignatureException("something gone wrong signature have been disturbed");
         }
-
-//        String data = paymentVerificationRequest.getRazorpayOrderId() + "|" + paymentVerificationRequest.getRazorpayPaymentId();
-//
-//        String generatedSignature = hmacSha256(data, "Z4r3xGX3UK3R71acSgmpN9sz");
-//
-//        if(!generatedSignature.equals(paymentVerificationRequest.getRazorpaySignature())){
-//            throw new RuntimeException("something gone wrong signature have been disturbed");
-//        }
 
         if(order.getPaymentStatus() == PaymentStatus.PAID){
-            return "Payment already verified";
+            throw new DuplicateOperationException("payment already verified for the order!");
         }
 
-        for(OrderItem item : order.getOrderItems()){
-            Product product = item.getProduct();
-
-            if(product.getQuantity() < item.getQuantity()){
-                throw new RuntimeException("Stock changed, cannot fulfill order");
-            }
-
-            product.setQuantity(product.getQuantity() - item.getQuantity());
-        }
+        orderCreationService.decrementStock(order);
 
         order.setOrderStatus(OrderStatus.CONFIRMED);
         order.setPaymentStatus(PaymentStatus.PAID);
-        order.setRazorpayPaymentId(paymentVerificationRequest.getRazorpayPaymentId());
+
+        payment.setPaymentStatus(PaymentStatus.PAID);
+        payment.setPaidAt(LocalDateTime.now());
+        payment.setGatewayPaymentId(paymentVerificationRequest.getGatewayPaymentId());
+        payment.setGatewaySignature(paymentVerificationRequest.getGatewaySignature());
 
         orderRepo.save(order);
-
-        user.getCart().getCartItems().clear();
-        userRepo.save(user);
-
-        //Shipment Creation
-//        String token = shipRocketService.authenticate("mail@gmail.com", "password123");
-//
-//        ShipmentOrderRequest shipmentOrderRequest = ShipmentOrderMapper.map(order, user);
-//
-//        ShipmentOrderResponse shipmentOrderResponse = shipRocketService.createShipment(token, shipmentOrderRequest);
-//
-//        order.setShipmentId(shipmentOrderResponse.getShipmentId());
-//        order.setCourierName(shipmentOrderResponse.getCourierName());
-//        order.setAwbCode(shipmentOrderResponse.getAwbCode());
-//        order.setTrackingStatus(shipmentOrderResponse.getTrackingStatus());
+        orderCreationService.clearCart(user);
 
         return "verified successfully";
+    }
+
+    public OrderResponse cancelOrder(UUID userId, UUID orderId) throws RazorpayException {
+
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("user not found !"));
+
+        Order order = orderRepo.findByOrderIdAndUser(orderId, user)
+                .orElseThrow(() -> new ResourceNotFoundException("order not found !"));
+
+        if(!order.getOrderStatus().equals(OrderStatus.CANCELLED)){
+            throw new DuplicateOperationException("order cancelled already !");
+        }
+
+        //order which cannot be canceled
+        if(!order.getOrderStatus().equals(OrderStatus.CONFIRMED)){
+            throw new BadRequestException("order cannot be cancelled !");
+        }
+
+        Payment payment = paymentRepo.findByOrderAndPaymentStatusNot(
+                order,
+                PaymentStatus.PENDING
+        );
+
+        if(!order.getPaymentMethod().equals(PaymentMethod.COD)){
+            //initiate refund
+            String gateway = payment.getGatewayName();
+            String getGatewayPaymentId = payment.getGatewayPaymentId();
+
+            if(gateway.equals("Razorpay")){
+
+                Refund refund = razorpayService.refund(getGatewayPaymentId);
+                orderCreationService.updateOrderAndPaymentDetails(order, payment, refund);
+            }
+        }
+
+        if(order.getPaymentMethod().equals(PaymentMethod.COD)){
+            orderCreationService.updateOrderAndPaymentDetails(order, payment, null);
+        }
+
+        orderCreationService.restoreStock(order, payment);
+
+        return new OrderResponse(order);
     }
 
 
 
     //shipment tracking
-
-    public String updateOrderTrackingFromWebhook(ShipRocketWebhookRequest shipRocketWebhookRequest){
-
-        Order order = orderRepo.getOrderByShipmentId(shipRocketWebhookRequest.getShipmentId());
-
-        if(order == null){
-            throw new RuntimeException("No Order exist");
-        }
-
-        order.setTrackingStatus(shipRocketWebhookRequest.getCourierStatus());
-
-        order.setAwbCode(shipRocketWebhookRequest.getAwbCode());
-
-        order.setCourierName(shipRocketWebhookRequest.getCourierName());
-
-        orderRepo.save(order);
-
-        return "updated successfully";
-    }
-
-
-
-    private static String hmacSha256(String data, String key) throws Exception {
-        javax.crypto.Mac mac = javax.crypto.Mac.getInstance("HmacSHA256");
-        javax.crypto.spec.SecretKeySpec secretKey =
-                new javax.crypto.spec.SecretKeySpec(key.getBytes(), "HmacSHA256");
-        mac.init(secretKey);
-        byte[] rawHmac = mac.doFinal(data.getBytes());
-        return org.apache.commons.codec.binary.Hex.encodeHexString(rawHmac);
-    }
+//    public String updateOrderTrackingFromWebhook(ShipRocketWebhookRequest shipRocketWebhookRequest){
+//
+//        Shipment shipment = shipmentRepo.findById(shipRocketWebhookRequest.getShipmentId())
+//                .orElseThrow();
+//
+//        if(order == null){
+//            throw new RuntimeException("No Order exist");
+//        }
+//
+//        order.setTrackingStatus(shipRocketWebhookRequest.getCourierStatus());
+//
+//        order.setAwbCode(shipRocketWebhookRequest.getAwbCode());
+//
+//        order.setCourierName(shipRocketWebhookRequest.getCourierName());
+//
+//        orderRepo.save(order);
+//
+//        return "updated successfully";
+//    }
 
 
 
-    public OrderResponse orderStatus(String email, int orderId, OrderStatusUpdate orderStatusUpdate){
 
-        Order order = orderRepo.getOrderByOrderId(orderId);
-        if(order == null){
-            throw new IllegalArgumentException("order does not exist");
-        }
 
-        OrderStatus current = order.getOrderStatus();
-        OrderStatus next = orderStatusUpdate.getOrderStatus();
-
-        if(!isValidTransition(current, next)){
-            throw new RuntimeException("order status cannot be changed");
-        }
-
-        order.setOrderStatus(orderStatusUpdate.getOrderStatus());
-        orderRepo.save(order);
-
-        OrderResponse orderResponse = new OrderResponse(order);
-        List<OrderItemResponse> orderItemResponses = new ArrayList<>();
-
-        for(OrderItem orderItem : order.getOrderItems()){
-            OrderItemResponse orderItemResponse = new OrderItemResponse(orderItem);
-            orderItemResponses.add(orderItemResponse);
-        }
-
-        orderResponse.setItems(orderItemResponses);
-
-        return orderResponse;
-    }
-
-    private boolean isValidTransition(OrderStatus current, OrderStatus next){
-
-        if(current == OrderStatus.PENDING && (next == OrderStatus.CANCELLED || next == OrderStatus.CONFIRMED)){
-            return true;
-        }
-        else if(current == OrderStatus.CONFIRMED && (next == OrderStatus.SHIPPED || next == OrderStatus.CANCELLED)){
-            return true;
-        }
-        else return current == OrderStatus.SHIPPED && (next == OrderStatus.DELIVERED);
-    }
+//    public OrderResponse orderStatus(String email, UUID orderId, OrderStatusUpdate orderStatusUpdate){
+//
+//        Order order = orderRepo.getOrderByOrderId(orderId);
+//        if(order == null){
+//            throw new IllegalArgumentException("order does not exist");
+//        }
+//
+//        OrderStatus current = order.getOrderStatus();
+//        OrderStatus next = orderStatusUpdate.getOrderStatus();
+//
+//        if(!isValidTransition(current, next)){
+//            throw new RuntimeException("order status cannot be changed");
+//        }
+//
+//        order.setOrderStatus(orderStatusUpdate.getOrderStatus());
+//        orderRepo.save(order);
+//
+//        OrderResponse orderResponse = new OrderResponse(order, new Payment());
+//        List<OrderItemResponse> orderItemResponses = new ArrayList<>();
+//
+//        for(OrderItem orderItem : order.getOrderItems()){
+//            OrderItemResponse orderItemResponse = new OrderItemResponse(orderItem);
+//            orderItemResponses.add(orderItemResponse);
+//        }
+//
+//        orderResponse.setItems(orderItemResponses);
+//
+//        return orderResponse;
+//    }
+//
+//    private boolean isValidTransition(OrderStatus current, OrderStatus next){
+//
+//        if(current == OrderStatus.PENDING && (next == OrderStatus.CANCELLED || next == OrderStatus.CONFIRMED)){
+//            return true;
+//        }
+//        else if(current == OrderStatus.CONFIRMED && (next == OrderStatus.SHIPPED || next == OrderStatus.CANCELLED)){
+//            return true;
+//        }
+//        else return current == OrderStatus.SHIPPED && (next == OrderStatus.DELIVERED);
+//    }
 }

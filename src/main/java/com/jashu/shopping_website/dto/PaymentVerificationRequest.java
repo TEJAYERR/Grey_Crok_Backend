@@ -1,32 +1,13 @@
 package com.jashu.shopping_website.dto;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class PaymentVerificationRequest {
 
-    private String razorpayOrderId;
-    private String razorpayPaymentId;
-    private String razorpaySignature;
-
-    public String getRazorpayOrderId() {
-        return razorpayOrderId;
-    }
-
-    public void setRazorpayOrderId(String razorpayOrderId) {
-        this.razorpayOrderId = razorpayOrderId;
-    }
-
-    public String getRazorpayPaymentId() {
-        return razorpayPaymentId;
-    }
-
-    public void setRazorpayPaymentId(String razorpayPaymentId) {
-        this.razorpayPaymentId = razorpayPaymentId;
-    }
-
-    public String getRazorpaySignature() {
-        return razorpaySignature;
-    }
-
-    public void setRazorpaySignature(String razorpaySignature) {
-        this.razorpaySignature = razorpaySignature;
-    }
+    private String gatewayOrderId;
+    private String gatewayPaymentId;
+    private String gatewaySignature;
 }

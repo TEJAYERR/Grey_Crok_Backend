@@ -1,5 +1,10 @@
 package com.jashu.shopping_website.dto;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Setter
+@Getter
 public class ShippingOrderItem {
 
     String name;
@@ -12,35 +17,4 @@ public class ShippingOrderItem {
 //    "hsn": ""
 
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getSku() {
-        return sku;
-    }
-
-    public void setSku(String sku) {
-        this.sku = sku;
-    }
-
-    public int getUnits() {
-        return units;
-    }
-
-    public void setUnits(int units) {
-        this.units = units;
-    }
-
-    public int getSellingPrice() {
-        return sellingPrice;
-    }
-
-    public void setSellingPrice(int sellingPrice) {
-        this.sellingPrice = sellingPrice;
-    }
 }

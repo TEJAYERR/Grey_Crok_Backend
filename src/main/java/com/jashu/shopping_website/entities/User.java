@@ -3,10 +3,9 @@ package com.jashu.shopping_website.entities;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.UUID;
 
 @Entity(name = "users")
 @Getter
@@ -14,15 +13,17 @@ import java.util.List;
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    int userId;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    UUID userId;
     String userName;
     @Column(nullable = false, unique = true)
     String email;
     @Column(unique = true, nullable = false)
     String mobileNumber;
     String password;
-    String role = "user";
+
+    @Enumerated(EnumType.STRING)
+    Role role = Role.USER;
 
     @Embedded
     Address address;

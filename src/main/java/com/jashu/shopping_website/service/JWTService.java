@@ -1,7 +1,6 @@
 package com.jashu.shopping_website.service;
 
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwt;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -26,7 +25,7 @@ public class JWTService {
                 .claims()
                 .subject(mobileNumber)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + 60 * 60 * 30))
+                .expiration(new Date(System.currentTimeMillis() + 60 * 1000 * 300))
                 .and()
                 .signWith(getKey())
                 .compact();

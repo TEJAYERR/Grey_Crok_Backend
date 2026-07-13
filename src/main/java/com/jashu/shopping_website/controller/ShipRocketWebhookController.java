@@ -8,20 +8,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
 
 @Controller
 public class ShipRocketWebhookController {
 
-    OrderService orderService;
+    private final OrderService orderService;
 
-    @Autowired
-    public void setOrderService(OrderService orderService){
+    public ShipRocketWebhookController(OrderService orderService) {
         this.orderService = orderService;
     }
 
-    @PostMapping("/shiprocket/webhook")
-    public ResponseEntity<?> shipRocketWebhook(@RequestBody ShipRocketWebhookRequest shipRocketWebhookRequest){
-        return new ResponseEntity<>(orderService.updateOrderTrackingFromWebhook(shipRocketWebhookRequest), HttpStatus.OK);
-    }
+//    @PostMapping("/shiprocket/webhook")
+//    public ResponseEntity<?> shipRocketWebhook(@RequestBody ShipRocketWebhookRequest shipRocketWebhookRequest){
+//        return new ResponseEntity<>(orderService.updateOrderTrackingFromWebhook(shipRocketWebhookRequest), HttpStatus.OK);
+//    }
 }

@@ -24,16 +24,11 @@ public class MyUserDetailsService implements UserDetailsService {
     @NullMarked
     public UserDetails loadUserByUsername(String mobileNumber) throws UsernameNotFoundException {
 
-        System.out.println("Mobile Number = " + mobileNumber);
-
         User user = userRepo.findUsersByMobileNumber(mobileNumber);
 
         if(user == null){
             throw new UsernameNotFoundException("user not found");
         }
-
-        System.out.println("DB User: " + user.getMobileNumber());
-        System.out.println("DB Password: " + user.getPassword());
 
         return new UserPrinciple(user);
     }

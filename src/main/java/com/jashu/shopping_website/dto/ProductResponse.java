@@ -1,97 +1,52 @@
 package com.jashu.shopping_website.dto;
 
+import com.jashu.shopping_website.entities.Category;
 import com.jashu.shopping_website.entities.Product;
-import org.springframework.stereotype.Component;
+import com.jashu.shopping_website.entities.SubCategory;
+import lombok.Getter;
+import lombok.Setter;
 
+import java.math.BigDecimal;
+import java.util.UUID;
+
+@Setter
+@Getter
 public class ProductResponse {
 
-    private int productId;
+    private UUID productId;
     private String productName;
-    private float productPrice;
+    private BigDecimal productPrice;
     private String productDescription;
     private int quantity;
-    private boolean isAvailable;
+    private boolean available;
     private int productRating;
+    private Category category;
+    private SubCategory subCategory;
 
     public ProductResponse(){}
 
-    public ProductResponse(int productId, String productName, float productPrice, String productDescription, int quantity, boolean isAvailable, int productRating) {
+    public ProductResponse(UUID productId, String productName, BigDecimal productPrice, String productDescription, int quantity, boolean available, int productRating, Category category, SubCategory subCategory) {
         this.productId = productId;
         this.productName = productName;
         this.productPrice = productPrice;
         this.productDescription = productDescription;
         this.quantity = quantity;
-        this.isAvailable = isAvailable;
+        this.available = available;
         this.productRating = productRating;
+        this.category = category;
+        this.subCategory = subCategory;
     }
 
-    public static ProductResponse getProductResponse(Product product) {
-        ProductResponse productResponse = new ProductResponse();
+    public ProductResponse(Product product) {
 
-        productResponse.setProductId(product.getProductId());
-        productResponse.setProductName(product.getProductName());
-        productResponse.setProductDescription(product.getProductDescription());
-        productResponse.setProductRating(product.getProductRating());
-        productResponse.setAvailable(product.isAvailable());
-        productResponse.setProductRating(product.getProductRating());
-        productResponse.setQuantity(product.getQuantity());
-        return productResponse;
-    }
-
-
-    public int getProductId() {
-        return productId;
-    }
-
-    public void setProductId(int productId) {
-        this.productId = productId;
-    }
-
-    public String getProductName() {
-        return productName;
-    }
-
-    public void setProductName(String productName) {
-        this.productName = productName;
-    }
-
-    public float getProductPrice() {
-        return productPrice;
-    }
-
-    public void setProductPrice(float productPrice) {
-        this.productPrice = productPrice;
-    }
-
-    public String getProductDescription() {
-        return productDescription;
-    }
-
-    public void setProductDescription(String productDescription) {
-        this.productDescription = productDescription;
-    }
-
-    public int getQuantity() {
-        return quantity;
-    }
-
-    public void setQuantity(int quantity) {
-        this.quantity = quantity;
-    }
-
-    public boolean isAvailable() {
-        return isAvailable;
-    }
-
-    public void setAvailable(boolean available) {
-        isAvailable = available;
-    }
-
-    public int getProductRating() {
-        return productRating;
-    }
-
-    public void setProductRating(int productRating) {
-        this.productRating = productRating;
+        this.productId = product.getProductId();
+        this.productName = product.getProductName();
+        this.productDescription = product.getProductDescription();
+        this.productRating = product.getProductRating();
+        this.available = product.getAvailable();
+        this.productRating = product.getProductRating();
+        this.quantity = product.getQuantity();
+        this.category = product.getCategory();
+        this.subCategory = product.getSubCategory();
     }
 }

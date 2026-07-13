@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @CrossOrigin
@@ -25,43 +26,23 @@ public class UserProductController {
 
     @GetMapping
     public ResponseEntity<List<ProductResponse>> getProducts(){
-        return new ResponseEntity<>(productService.getProducts(), HttpStatus.OK);
+        return ResponseEntity.ok(productService.getProducts());
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getProductById(@PathVariable int id){
+    @GetMapping("/{productId}")
+    public ResponseEntity<?> getProductById(@PathVariable UUID productId){
 
-        ProductResponse product = productService.getProductResponseById(id);
-        if(product == null)
-            return new ResponseEntity<>("Product does not exist", HttpStatus.NOT_FOUND);
-
-        return new ResponseEntity<>(product, HttpStatus.OK);
-
+        return ResponseEntity.ok(productService.getProductResponseById(productId));
     }
 
-    @GetMapping("/{id}/image")
-    public ResponseEntity<?> getImageById(@PathVariable int id){
+    @GetMapping("/{productId}/image")
+    public ResponseEntity<?> getImageById(@PathVariable UUID productId){
 
-        Product product = productService.getProductById(id);
-
-        if(product == null)
-            return new ResponseEntity<>("Product does not exist", HttpStatus.NO_CONTENT
-            );
+        Product product = productService.getProductById(productId);
 
         return ResponseEntity
                 .ok()
                 .contentType(MediaType.valueOf(product.getImageType()))
                 .body(product.getImageData());
-    }
-
-    @GetMapping("/search={searchKeyword}")
-    public ResponseEntity<?> searchProductsByKeyword(@PathVariable String searchKeyword){
-
-        try {
-            return new ResponseEntity<>(productService.searchProductByKeyword(searchKeyword), HttpStatus.OK);
-        } catch (Exception e) {
-            System.out.println("Error");
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
-        }
     }
 }

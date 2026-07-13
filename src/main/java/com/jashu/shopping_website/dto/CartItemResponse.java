@@ -1,30 +1,24 @@
 package com.jashu.shopping_website.dto;
 
+import com.jashu.shopping_website.entities.CartItem;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.util.UUID;
+
+@Setter
+@Getter
 public class CartItemResponse {
 
-    int productId;
+    UUID cartItemId;
+    UUID productId;
     int quantity;
 
     public CartItemResponse(){}
 
-    public CartItemResponse(int productId, int quantity) {
-        this.productId = productId;
-        this.quantity = quantity;
-    }
-
-    public int getProductId() {
-        return productId;
-    }
-
-    public void setProductId(int productId) {
-        this.productId = productId;
-    }
-
-    public int getQuantity() {
-        return quantity;
-    }
-
-    public void setQuantity(int quantity) {
-        this.quantity = quantity;
+    public CartItemResponse(CartItem cartItem) {
+        this.cartItemId = cartItem.getCartItemId();
+        this.productId = cartItem.getProduct().getProductId();
+        this.quantity = cartItem.getQuantity();
     }
 }

@@ -22,10 +22,6 @@ public class RegistrationController {
     @PostMapping
     public ResponseEntity<?> registerNewUser(@RequestBody RegisterRequest registerRequest){
 
-        try {
-            return new ResponseEntity<>(registrationService.registerNewUser(registerRequest), HttpStatus.CREATED);
-        } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-        }
+        return new ResponseEntity<>(registrationService.registerNewUser(registerRequest), HttpStatus.CREATED);
     }
 }

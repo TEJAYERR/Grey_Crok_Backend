@@ -1,15 +1,16 @@
 package com.jashu.shopping_website.controller;
 
 import com.jashu.shopping_website.dto.AddToCartRequest;
-import com.jashu.shopping_website.entities.CartItem;
+import com.jashu.shopping_website.dto.UserPrinciple;
 import com.jashu.shopping_website.service.CartService;
-import com.jashu.shopping_website.util.TokenUtil;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @CrossOrigin
@@ -18,126 +19,28 @@ public class CartController {
 
     CartService cartService;
 
-    CartController(CartService cartService){
+    CartController(CartService cartService) {
         this.cartService = cartService;
     }
 
     @GetMapping
-    public ResponseEntity<?> getCartItems(@RequestHeader("Authorization") String authorization){
+    public ResponseEntity<?> getCartItems(@AuthenticationPrincipal UserPrinciple userPrinciple) {
 
-        long start = System.currentTimeMillis();
-
-        if(authorization == null || !authorization.startsWith("Bearer ")){
-            throw new RuntimeException("Invalid Token!");
-        }
-
-        String token = authorization.substring(7);
-        String[] data = TokenUtil.decodeToken(token);
-
-        if(data.length < 2){
-            throw new RuntimeException("Misformed token");
-        }
-
-        String email = data[0];
-        String role = data[1];
-
-        if(!role.equalsIgnoreCase("admin") && !role.equalsIgnoreCase("user")){
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        }
-
-        try {
-            ResponseEntity<?> responseEntity = new ResponseEntity<>(cartService.getCartItems(email), HttpStatus.OK);
-
-            System.out.println(System.currentTimeMillis() - start); //optimization checking
-
-            return responseEntity;
-
-        } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        return ResponseEntity.ok(cartService.getCartItems(userPrinciple.getUser().getUserId()));
     }
 
     @PostMapping("/items")
-    public ResponseEntity<?> addProductToCart(@RequestHeader("Authorization") String authorization, @RequestBody AddToCartRequest addToCartRequest){
+    public ResponseEntity<?> addProductToCart(@AuthenticationPrincipal UserPrinciple userPrinciple,
+                                              @RequestBody AddToCartRequest addToCartRequest) {
 
-        if(authorization == null || !authorization.startsWith("Bearer ")){
-            throw new RuntimeException("Invalid Token!");
-        }
-
-        String token = authorization.substring(7);
-        String[] data = TokenUtil.decodeToken(token);
-
-        if(data.length < 2){
-            throw new RuntimeException("Misformed token");
-        }
-
-        String email = data[0];
-        String role = data[1];
-
-        if(!role.equalsIgnoreCase("admin") && !role.equalsIgnoreCase("user")){
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        }
-
-        try {
-            return new ResponseEntity<>(cartService.addProductToCart(addToCartRequest, email), HttpStatus.CREATED);
-        } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(cartService.addProductToCart(userPrinciple.getUser().getUserId(), addToCartRequest));
     }
 
-    @DeleteMapping("/items/{id}")
-    public ResponseEntity<?> deleteProductFromCart(@RequestHeader("Authorization") String authorization, @PathVariable int id){
+    @DeleteMapping("/items/{cartItemId}")
+    public ResponseEntity<?> deleteProductFromCart(@AuthenticationPrincipal UserPrinciple userPrinciple,
+                                                   @PathVariable UUID cartItemId) {
 
-        if(authorization == null || !authorization.startsWith("Bearer ")){
-            throw new RuntimeException("Invalid Token!");
-        }
-
-        String token = authorization.substring(7);
-        String[] data = TokenUtil.decodeToken(token);
-
-        if(data.length < 2){
-            throw new RuntimeException("Misformed token");
-        }
-
-        String email = data[0];
-        String role = data[1];
-
-        if(!role.equalsIgnoreCase("admin") && !role.equalsIgnoreCase("user")){
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        }
-
-        try {
-            return new ResponseEntity<>(Map.of("message", cartService.deleteProductFromCart(id, email)), HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        return ResponseEntity.ok(Map.of("message", cartService.deleteProductFromCart(userPrinciple.getUser().getUserId(), cartItemId)));
     }
-
-//    @DeleteMapping("{id}")
-//    public ResponseEntity<?> ReduceQuantityOfProduct(@RequestHeader("Authorization") String authorization, @PathVariable int id){
-//
-//        if(authorization == null || !authorization.startsWith("Bearer ")){
-//            throw new RuntimeException("Invalid Token!");
-//        }
-//
-//        String token = authorization.substring(7);
-//        String[] data = TokenUtil.decodeToken(token);
-//
-//        if(data.length < 2){
-//            throw new RuntimeException("Misformed token");
-//        }
-//
-//        String email = data[0];
-//        String role = data[1];
-//
-//        if(!role.equalsIgnoreCase("admin") && !role.equalsIgnoreCase("user")){
-//            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-//        }
-//
-//        try {
-//            return new ResponseEntity<>(cartService.deleteProductFromCart(id, email), HttpStatus.OK);
-//        } catch (Exception e) {
-//            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-//        }
-//    }
 }

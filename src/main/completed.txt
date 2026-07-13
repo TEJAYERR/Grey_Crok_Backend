@@ -1,0 +1,119 @@
+Based on our recent work on your production-grade shopping website (for your friend's business), here's where we are.
+
+✅ Completed
+Backend
+✅ Spring Boot backend architecture
+✅ Authentication & authorization
+✅ Product APIs
+✅ Cart functionality
+✅ Address management
+✅ Order creation flow
+✅ Global exception handling
+✅ Custom exceptions with proper HTTP status codes
+✅ PostgreSQL migration (Aiven PostgreSQL)
+✅ Transaction management (@Transactional)
+✅ Production-oriented code structure
+Payment
+✅ Razorpay integrated
+✅ Razorpay Order creation
+✅ Backend generates Razorpay Order ID
+✅ Frontend can initiate payment
+✅ Discussed payment verification using signature verification
+✅ Discussed production flow and security
+✅ Discussed refund architecture and webhooks
+Database
+✅ Switched to PostgreSQL
+✅ SSL connection string
+✅ Configuring application.properties
+✅ Order and payment entities are being used
+🔄 Currently Working On
+
+We were specifically working on the Place Order flow.
+
+The latest discussion was around this method:
+
+@Transactional
+public OrderResponse placeOrder(...)
+
+where
+
+User is fetched
+Address copied
+Order created
+Razorpay Order created
+
+You asked whether creating a Razorpay order that later gets ignored causes any damage.
+
+Answer:
+
+It is safe.
+Razorpay orders can remain unpaid.
+They simply expire/become unused.
+No money is deducted unless payment succeeds.
+🚧 Remaining (Immediate)
+Finish Place Order completely
+Create DB order
+Create Razorpay order
+Save payment status
+Return response
+Payment Verification API
+Verify signature
+Mark payment SUCCESS
+Mark order PAID
+Reduce stock
+Clear cart
+Razorpay Webhooks
+payment.captured
+payment.failed
+refund.processed
+Handle duplicate webhook delivery (idempotency)
+📦 Remaining Features
+Inventory management
+Coupon system (optional)
+Wishlist (optional)
+Reviews & ratings
+Order cancellation
+Returns
+Refund processing
+Email notifications
+Invoice generation (PDF)
+Admin dashboard improvements
+Analytics
+Audit logging
+🚚 Shipping
+
+From our previous discussions:
+
+Shiprocket is partially integrated.
+After successful payment, shipping order creation should be completed.
+Store tracking details and shipment status.
+🚀 Before Production Deployment
+Environment variables
+Rate limiting
+Logging
+Monitoring
+Database backups
+HTTPS
+Security headers
+Input validation
+API documentation
+CI/CD pipeline
+
+                                What's next
+
+                                Given the roadmap we've discussed previously, I'd move to:
+
+                                Shiprocket integration
+                                Shipment creation
+                                AWB generation
+                                Tracking
+                                Shipment webhooks
+                                Admin dashboard APIs
+                                Order management
+                                Shipment management
+                                Refund visibility
+                                Inventory management
+                                Inventory improvements
+                                Low-stock alerts
+                                Better stock validation
+                                Reservation edge cases if needed

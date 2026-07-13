@@ -7,11 +7,10 @@ import com.jashu.shopping_website.entities.SubCategory;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-import javax.xml.catalog.Catalog;
 import java.util.List;
+import java.util.UUID;
 
-public interface ProductRepo extends JpaRepository<Product, Integer> {
-//    List<Product> getProductsByProductId(int productId);
+public interface ProductRepo extends JpaRepository<Product, UUID> {
     @Query("""
         SELECT new com.jashu.shopping_website.dto.ProductResponse(
             p.productId,
@@ -20,7 +19,9 @@ public interface ProductRepo extends JpaRepository<Product, Integer> {
             p.productDescription,
             p.quantity,
             p.available,
-            p.productRating
+            p.productRating,
+            p.category,
+            p.subCategory
         )
         FROM Product p
         """)
@@ -34,61 +35,13 @@ public interface ProductRepo extends JpaRepository<Product, Integer> {
             p.productDescription,
             p.quantity,
             p.available,
-            p.productRating
+            p.productRating,
+            p.category,
+            p.subCategory
         )
         FROM Product p 
         WHERE p.productId = :productId
         """)
-    ProductResponse getProductByProductId(Integer productId);
-
-    Product getByProductId(Integer productId);
-
-    @Query("""
-
-        SELECT new com.jashu.shopping_website.dto.ProductResponse(
-            p.productId,
-            p.productName,
-            p.productPrice,
-            p.productDescription,
-            p.quantity,
-            p.available,
-            p.productRating
-        ) from Product p
-          where p.subCategory = :subCategory
-    """)
-
-    List<ProductResponse> getProductsBySubCategory(SubCategory subCategory);
-
-    @Query("""
-
-        SELECT new com.jashu.shopping_website.dto.ProductResponse(
-            p.productId,
-            p.productName,
-            p.productPrice,
-            p.productDescription,
-            p.quantity,
-            p.available,
-            p.productRating
-        ) from Product p
-        where p.productName = :productName
-    """)
-
-    List<ProductResponse> getProductsByProductName(String productName);
-
-
-    @Query("""
-
-        SELECT new com.jashu.shopping_website.dto.ProductResponse(
-            p.productId,
-            p.productName,
-            p.productPrice,
-            p.productDescription,
-            p.quantity,
-            p.available,
-            p.productRating
-        ) from Product p
-        where p.category = :category
-    """)
-    List<ProductResponse> getProductsByCategory(Category category);
+    ProductResponse getProductByProductId(UUID productId);
 
 }
