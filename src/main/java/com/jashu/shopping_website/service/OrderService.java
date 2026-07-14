@@ -167,7 +167,7 @@ public class OrderService {
         Order order = orderRepo.findByOrderIdAndUser(orderId, user)
                 .orElseThrow(() -> new ResourceNotFoundException("order not found !"));
 
-        if(!order.getOrderStatus().equals(OrderStatus.CANCELLED)){
+        if(order.getOrderStatus().equals(OrderStatus.CANCELLED)){
             throw new DuplicateOperationException("order cancelled already !");
         }
 
