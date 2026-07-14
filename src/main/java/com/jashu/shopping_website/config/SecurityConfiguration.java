@@ -45,7 +45,8 @@ public class SecurityConfiguration {
                                 "/login",
                                 "/products",
                                 "/products/**",
-                                "/health").permitAll()
+                                "/health",
+                                "/webhooks/razorpay").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/error/**").permitAll()
                         .anyRequest().authenticated()
